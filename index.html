@@ -2,52 +2,61 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#111111">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Gemma AI</title>
   <style>
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #000; color: #fff; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    header { background: #111; padding: 18px; text-align: center; font-size: 18px; font-weight: 600; border-bottom: 1px solid #333; z-index: 10; display: flex; justify-content: center; align-items: center; gap: 8px;}
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #000; color: #fff; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+    header { background: #111; padding: 15px 20px; font-size: 18px; font-weight: 600; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+    .header-title { display: flex; align-items: center; gap: 8px; }
     .status-dot { width: 8px; height: 8px; background: #34C759; border-radius: 50%; }
+    .clear-btn { background: #333; border: none; color: white; padding: 6px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
     #chat { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
-    .msg { max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
+    .msg { max-width: 85%; padding: 12px 16px; border-radius: 20px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
     .user { align-self: flex-end; background-color: #0A84FF; color: white; border-bottom-right-radius: 4px; }
     .bot { align-self: flex-start; background-color: #2C2C2E; color: white; border-bottom-left-radius: 4px; }
     .typing { font-size: 12px; color: #888; align-self: flex-start; margin-top: -8px; margin-bottom: 8px; display: none; font-style: italic; }
-    #input-area { background: #111; padding: 10px 15px 20px; display: flex; gap: 10px; border-top: 1px solid #333; }
-    input { flex: 1; background: #2C2C2E; border: none; padding: 12px 16px; border-radius: 20px; color: white; font-size: 16px; outline: none; }
+    #input-area { background: #111; padding: 12px 15px calc(20px + env(safe-area-inset-bottom)); display: flex; gap: 10px; border-top: 1px solid #333; align-items: center; }
+    input { flex: 1; background: #2C2C2E; border: none; padding: 14px 16px; border-radius: 24px; color: white; font-size: 16px; outline: none; }
     input::placeholder { color: #888; }
-    button { background: #0A84FF; border: none; width: 44px; height: 44px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    button svg { width: 20px; height: 20px; fill: white; margin-left: 2px;}
+    button.send-btn { background: #0A84FF; border: none; min-width: 44px; height: 44px; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    button.send-btn svg { width: 20px; height: 20px; fill: white; margin-left: 2px; }
   </style>
 </head>
 <body>
-  <header><div class="status-dot"></div> Gemma 4</header>
+  <header>
+    <div class="header-title"><div class="status-dot"></div> Gemma 4</div>
+    <button class="clear-btn" onclick="clearChat()">Clear Chat</button>
+  </header>
+  
   <div id="chat">
     <div class="msg bot">Hi Asha! How can I help you today?</div>
   </div>
   <div id="loading" class="typing">Gemma is typing...</div>
-  <div id="input-area">
-    <input type="text" id="userInput" placeholder="Message Gemma..." onkeypress="if(event.key === 'Enter') send()" />
-    <button onclick="send()">
+  
+  <form id="input-area" onsubmit="event.preventDefault(); send();">
+    <input type="text" id="userInput" placeholder="Message Gemma..." autocomplete="off" />
+    <button type="submit" class="send-btn">
       <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
     </button>
-  </div>
+  </form>
 
   <script>
     // Paste your Google AI Studio API key below
-    const API_KEY = "AQ.Ab8RN6LCXZzuAvVKxmCZ63tbTNbC4MDAYR0tIBpRG-8FxMCc0wclass=""";
+    const API_KEY = "AQ.Ab8RN6LCXZzuAvVKxmCZ63tbTNbC4MDAYR0tIBpRG-8FxMCc0w"
     const MODEL = "gemma-4-26b-a4b-it";
     const chat = document.getElementById("chat");
     const loader = document.getElementById("loading");
+    const input = document.getElementById("userInput");
 
     async function send() {
-      const input = document.getElementById("userInput");
       const text = input.value.trim();
       if (!text) return;
 
       addMsg(text, "user");
       input.value = "";
+      input.blur(); // Closes the mobile keyboard automatically
       loader.style.display = "block";
       chat.scrollTop = chat.scrollHeight;
 
@@ -73,6 +82,11 @@
       chat.appendChild(div);
       chat.scrollTop = chat.scrollHeight;
     }
+
+    function clearChat() {
+      chat.innerHTML = '<div class="msg bot">Chat cleared! What would you like to talk about now?</div>';
+    }
   </script>
 </body>
 </html>
+
